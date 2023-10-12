@@ -34,7 +34,7 @@ const isCreated = (Model) => async (req, res, next) => {
     try {
         const user = await Model.findOne({ email });
         if (user) {
-            res.status(409).json({ error: "User already exists" });
+            res.status(409).json({ error: `Email: ${email} already exists` });
         } else {
             next();
         }
@@ -48,7 +48,7 @@ const isExistEmail = (Model) => async (req, res, next) => {
     try {
         const user = await Model.findOne({ email });
         if (!user) {
-            res.status(404).json({ error: `${email} does not exists` });
+            res.status(404).json({ error: `Email: ${email} does not exists` });
         } else {
             next();
         }
@@ -57,9 +57,25 @@ const isExistEmail = (Model) => async (req, res, next) => {
     }
 };
 
+const isCreatedUsername = (Model) => async (req, res, next) => {
+    const username = req.body.username || req.query.username || req.params.username;
+    try {
+        const user = await Model.findOne({ username });
+        if(user){
+            res.status(409).json({ error: `Username: ${username} already exists` });
+        }
+        else{
+            next();
+        }
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
 module.exports = {
     validateInput,
     isExistId,
     isCreated,
-    isExistEmail
+    isExistEmail,
+    isCreatedUsername
 };

@@ -22,16 +22,16 @@ usersRouter.post('/login', validateInput(['username', 'password']), login);
 // password recovery
 usersRouter.post('/recover-password', validateInput(['email']), isExistEmail(Users), passwordRecovery);
 // update to premium
-usersRouter.put('/profiles/:userId/update-premium', isExistId(Users), updatePremium);
+usersRouter.put('/profiles/update-premium/:id', isExistId(Users), updatePremium);
 // change password
-usersRouter.put('/profiles/:userId/password', validateInput(['password', 'newPassword']), isExistId(Users), changePassword);
+usersRouter.put('/profiles/password/:id', validateInput(['password', 'newPassword']), isExistId(Users), changePassword);
 // update user
-usersRouter.put('/profiles/:userId', isExistId(Users), isCreated(Users), updateUser);
+usersRouter.put('/profiles/:id', isExistId(Users), isCreated(Users), updateUser);
 // upload profile image
-usersRouter.put('/profiles/:userId/change-profile-image', uploadImg.single('avatars'), uploadImage);
+usersRouter.put('/profiles/change-profile-image/:id', uploadImg.single('avatars'), uploadImage);
 // get all users
 usersRouter.get("/", getAllUsers);
 // get user by id
-usersRouter.get("/:userId", getUserById);
+usersRouter.get("/:id", isExistId(Users), getUserById);
 
 module.exports = usersRouter;

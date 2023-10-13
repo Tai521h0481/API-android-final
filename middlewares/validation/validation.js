@@ -16,11 +16,11 @@ const validateInput = (requiredFields) => (req, res, next) => {
 };
 
 const isExistId = (Model) => async (req, res, next) => {
-    const userId = req.params.userId || req.body.userId || req.query.userId;
+    const id = req.params.id || req.body.id || req.query.id;
     try {
-        const model = await Model.findById(userId);
+        const model = await Model.findById(id);
         if (!model) {
-            return res.status(404).json({ message: `${Model.name} does not exist with id: ${userId}` });
+            return res.status(404).json({ message: `${Model.name} does not exist with id: ${id}` });
         } else {
             next();
         }

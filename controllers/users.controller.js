@@ -1,9 +1,11 @@
 const gravatar = require('gravatar');
 require('dotenv').config();
+const jwt = require('jsonwebtoken');
+const bcrypt = require("bcryptjs");
 const { Users } = require('../models');
 
+const {TOKEN_TIME, TOKEN_SECRET_KEY} = process.env;
 const avatarSize = process.env.avatarSize;
-
 const userMail = process.env.userMail;
 const passMail = process.env.passMail;
 const nodemailer = require('nodemailer');
@@ -25,7 +27,7 @@ const sendEmail = (email, password, res) => {
     };
     transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
-            res.status(500).json({ message: error.message });
+            res.status(500).json({ error: error.message });
         } else {
             res.status(200).json({ message: "Email sent" });
         }
@@ -53,21 +55,22 @@ const login = async (req, res) => {
     try {
         const user = await Users.findOne({ username, password }).select('-password');
         if (!user) {
-            res.status(401).json({ message: 'username or password is incorrect' });
+            res.status(401).json({ error: 'username or password is incorrect' });
             return;
         }
-        res.status(200).json({ user });
+        const token = jwt.sign({ data: user }, TOKEN_SECRET_KEY, { expiresIn: TOKEN_TIME });
+        res.status(200).json({ user , token});
     } catch (error) {
         res.status(500).json({ error });
     }
 }
 
 const updatePremium = async (req, res) => {
-    const userId = req.params.userId || req.query.userId;
+    const id = req.params.id || req.query.id;
     try {
-        const user = await Users.findById(userId).select('-password');
+        const user = await Users.findById(id).select('-password');
         if (!user) {
-            res.status(404).json({ message: 'User not found' });
+            res.status(404).json({ error: 'User not found' });
             return;
         }
         user.isPremiumAccount = true;
@@ -79,13 +82,12 @@ const updatePremium = async (req, res) => {
 }
 
 const changePassword = async (req, res) => {
-    const userId = req.params.userId || req.query.userId;
+    const id = req.params.id || req.query.id;
     const { password, newPassword } = req.body;
     try {
-        const user = await Users.findOne({ _id: userId, password});
-        console.log(user);
+        const user = await Users.findOne({ _id: id, password});
         if (!user) {
-            res.status(404).json({ message: 'Invalid password' });
+            res.status(404).json({ error: 'Invalid password' });
             return;
         }
         user.password = newPassword;
@@ -97,12 +99,12 @@ const changePassword = async (req, res) => {
 }
 
 const updateUser = async (req, res) => {
-    const userId = req.params.userId || req.query.userId;
+    const id = req.params.id || req.query.id;
     const { almaMater, email } = req.body;
     try {
-        const user = await Users.findByIdAndUpdate(userId, { almaMater, email });
+        const user = await Users.findByIdAndUpdate(id, { almaMater, email });
         if (!user) {
-            res.status(404).json({ message: 'User not found' });
+            res.status(404).json({ error: 'User not found' });
             return;
         }
         res.status(200).json({ message: "Update user successfully" });
@@ -114,11 +116,11 @@ const updateUser = async (req, res) => {
 const uploadImage = async (req, res) => {
     const { file } = req;
     const urlImg = file?.path;
-    const userId = req.params.userId || req.query.userId;
+    const id = req.params.id || req.query.id;
     try {
-        const user = await Users.findByIdAndUpdate(userId, { profileImage: urlImg });
+        const user = await Users.findByIdAndUpdate(id, { profileImage: urlImg });
         if (!user) {
-            res.status(404).json({ message: 'User not found' });
+            res.status(404).json({ error: 'User not found' });
             return;
         }
         res.status(200).json({ message: "Change profile image successfully" });
@@ -141,7 +143,7 @@ const getAllUsers = async (req, res) => {
     try {
         const users = await Users.find().select("-password");
         if(users.length === 0){
-            res.status(404).send({"message": "list users are empty"});
+            res.status(404).send({error: "list users are empty"});
             return;
         }
         res.status(200).json({users});
@@ -151,11 +153,11 @@ const getAllUsers = async (req, res) => {
 }
 
 const getUserById = async (req, res) =>{
-    const userId = req.params.userId || req.query.userId;
+    const id = req.params.id || req.query.id;
     try {
-        const user = await Users.findById(userId).select("-password");
+        const user = await Users.findById(id).select("-password");
         if(!user){
-            res.status(404).send({"message": "user not found"});
+            res.status(404).send({error: "user not found"});
             return;
         }
         res.status(200).json({user});
